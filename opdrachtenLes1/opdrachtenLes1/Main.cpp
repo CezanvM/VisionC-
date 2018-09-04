@@ -22,9 +22,16 @@ int main ()
 	cvtColor(image, gray_image, CV_BGR2GRAY);
 	imshow("Original_grey", gray_image);
 	waitKey(0);
-	Mat greyBright;
-	greyBright = gray_image * 1.75;
-	imshow("grey bright", greyBright);
+
+	
+	
+	Mat treshhold_Img;
+	Range range = Range(128, 255);
+	
+
+	threshold(gray_image, treshhold_Img, 128, 255, 3);
+
+	imshow("treshold", treshhold_Img * 255);
 	waitKey(0);
 	getchar();
 
