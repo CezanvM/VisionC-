@@ -100,7 +100,8 @@ Mat calculateContour(Point startPixel, Mat img)
 			if (img.at<uchar>(currentPos + Offset[whileindex]) == 1)
 			{
 				lastPos = currentPos;
-				
+				if (whileindex == 6)
+					cout << "kek" << endl;
 				currentPos = currentPos + Offset[whileindex];
 				backTrackPos = calculateBackTrackPos(img, currentPos, lastPos);
 				contour.at<uchar>(lastPos) = char1;
@@ -123,21 +124,23 @@ Mat calculateContour(Point startPixel, Mat img)
 
 int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 {
-	int backtrackPos[6][3] = {
+	int backtrackPos[7][3] = {
 		// { xdif , ydif, backtrack Start pos}
 	{ -1, 0, 1 },
 	{ -1, -1, 1 },
 	{ 0, -1, 3 },
 	{ 1, 0, 5 },
 	{ 0, 1, 7 },
-	{ 1, 1, 5 }
+	{ 1, 1, 5 },
+	{1,-1,3}
+
 	};
 
 	int backtrackStartPos;
 	int newBacktrackPos;
 	Point pointdif = lastPos - currentPos;
 
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < 7; i++)
 	{
 		if (pointdif.x == backtrackPos[i][0] && pointdif.y == backtrackPos[i][1])
 		{
