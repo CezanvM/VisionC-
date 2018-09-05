@@ -10,6 +10,18 @@ Mat invertBits(Mat img);
 void MooreBoundry(Mat img);
 
 
+Point Offset[8] = {
+	{ -1, -1 },   //  +----------+----------+----------+
+{ 0, -1 },        //  |          |          |          |
+{ 1, -1 },        //  |(x-1,y-1) | (x,y-1)  |(x+1,y-1) |
+{ 1, 0 },         //  +----------+----------+----------+
+{ 1, 1 },         //  |(x-1,y)   |  (x,y)   |(x+1,y)   |
+{ 0, 1 },         //  |          |          |          |
+{ -1, 1 },        //  +----------+----------+----------+
+{ -1, 0 }         //  |          | (x,y+1)  |(x+1,y+1) |
+};                //  |(x-1,y+1) |          |          |
+				  //  +----------+----------+----------+
+
 int main()
 {
 
@@ -55,32 +67,121 @@ int main()
 
 
 }
-//void MooreRowCheck(Mat img, Mat boundry, int x, int y);
-//
+
+
+Point findFirstPixel(Mat img);
+Mat calculateContour(Point startPixel, Mat img);
+
 void MooreBoundry(Mat img)
 {
-	//	Mat boundry = Mat::zeros(img.cols, img.rows, img.type());
-	//
-	//	for (int x = 0; x < img.rows; x++)
-	//	{
-	//		for (int y= 0; y < img.cols; y++)
-	//		{
-	//
-	//			if (img.at<uchar>(x, y) == 1)
-	//			{
-	//				uchar char1 = 1;
-	//				boundry.at<uchar>(Point(x, y)) = char1;
-	//				MooreRowCheck(img, boundry, x, y);
-	//				break;
-	//
-	//			}
-	//
-	//		}
-	//	}
-	//
-	//	imshow("Boundry", boundry * 255);
-	//
+	Point firstPixel = findFirstPixel(img);
+	imshow("Contour", calculateContour(firstPixel, img) * 255);
+
 }
+
+int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos);
+
+Mat calculateContour(Point startPixel, Mat img)
+{
+	bool finished = false;
+	uchar char1 = 1;
+	int backTrackPos = 0;
+	Mat contour = Mat::zeros(img.cols, img.rows, img.type());
+	contour.at<uchar>(startPixel) = char1;
+	Point currentPos = startPixel;
+	Point lastPos;
+
+	while (!finished)
+	{
+		int index = 0;
+		int whileindex = backTrackPos;
+		while (index < 8)
+		{
+			if (img.at<uchar>(currentPos + Offset[whileindex]) == 1)
+			{
+				lastPos = currentPos;
+				
+				currentPos = currentPos + Offset[whileindex];
+				backTrackPos = calculateBackTrackPos(img, currentPos, lastPos);
+				contour.at<uchar>(lastPos) = char1;
+				break;
+			}
+
+			whileindex++;
+			if (whileindex > 7)
+			{
+				whileindex = 0;
+			}
+		}
+
+		if (currentPos == startPixel)
+			finished = true;
+	}
+
+	return contour;
+}
+
+int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
+{
+	int backtrackPos[6][3] = {
+		// { xdif , ydif, backtrack Start pos}
+	{ -1, 0, 1 },
+	{ -1, -1, 1 },
+	{ 0, -1, 3 },
+	{ 1, 0, 5 },
+	{ 0, 1, 7 },
+	{ 1, 1, 5 }
+	};
+
+	int backtrackStartPos;
+	int newBacktrackPos;
+	Point pointdif = lastPos - currentPos;
+
+	for (int i = 0; i < 6; i++)
+	{
+		if (pointdif.x == backtrackPos[i][0] && pointdif.y == backtrackPos[i][1])
+		{
+			backtrackStartPos = backtrackPos[i][2];
+			break;
+		}
+	}
+
+	int index = 0;
+	int whileIndex = backtrackStartPos;
+	while (index < 8)
+	{
+		if (img.at<uchar>(currentPos + Offset[whileIndex]) == 0)
+		{
+			newBacktrackPos = whileIndex;
+			break;
+		}
+
+		whileIndex++;
+		if (whileIndex > 7)
+			whileIndex = 0;
+	}
+
+
+	return newBacktrackPos;
+}
+
+Point findFirstPixel(Mat img)
+{
+	for (int y = 0; y < img.cols; y++)
+	{
+		for (int x = 0; x < img.rows; x++)
+		{
+			if (img.at<uchar>(Point(x, y)) == 1)
+			{
+				cout << "first pixel found at [" << x << "," << y << "]" << endl;
+				return Point(x, y);
+			}
+
+		}
+	}
+}
+
+//void 
 
 
 //
