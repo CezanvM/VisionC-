@@ -76,6 +76,7 @@ void MooreBoundry(Mat img)
 {
 	Point firstPixel = findFirstPixel(img);
 	imshow("Contour", calculateContour(firstPixel, img) * 255);
+	moveWindow("Contour", 100, 20);
 
 }
 
@@ -100,11 +101,14 @@ Mat calculateContour(Point startPixel, Mat img)
 			if (img.at<uchar>(currentPos + Offset[whileindex]) == 1)
 			{
 				lastPos = currentPos;
-				if (whileindex == 6)
-					cout << "kek" << endl;
+				cout << whileindex << endl;
 				currentPos = currentPos + Offset[whileindex];
-				backTrackPos = calculateBackTrackPos(img, currentPos, lastPos);
+				
+					backTrackPos = calculateBackTrackPos(img, currentPos, lastPos);
+		
+
 				contour.at<uchar>(lastPos) = char1;
+				
 				break;
 			}
 
@@ -124,7 +128,7 @@ Mat calculateContour(Point startPixel, Mat img)
 
 int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 {
-	int backtrackPos[7][3] = {
+	int backtrackPos[8][3] = {
 		// { xdif , ydif, backtrack Start pos}
 	{ -1, 0, 1 },
 	{ -1, -1, 1 },
@@ -132,7 +136,8 @@ int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 	{ 1, 0, 5 },
 	{ 0, 1, 7 },
 	{ 1, 1, 5 },
-	{1,-1,3}
+	{1,-1,3},
+	{-1,1,1}
 
 	};
 
@@ -140,30 +145,39 @@ int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 	int newBacktrackPos;
 	Point pointdif = lastPos - currentPos;
 
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < 8; i++)
 	{
-		if (pointdif.x == backtrackPos[i][0] && pointdif.y == backtrackPos[i][1])
-		{
-			backtrackStartPos = backtrackPos[i][2];
-			break;
-		}
+			if (pointdif.x == backtrackPos[i][0] && pointdif.y == backtrackPos[i][1])
+			{
+				backtrackStartPos = backtrackPos[i][2];
+
+				break;
+			}
+		
+		
 	}
+	if (backtrackStartPos < 0)
+		cout << endl;
 
 	int index = 0;
 	int whileIndex = backtrackStartPos;
+	
 	while (index < 8)
 	{
-		if (img.at<uchar>(currentPos + Offset[whileIndex]) == 0)
-		{
-			newBacktrackPos = whileIndex;
-			break;
-		}
+		cout << whileIndex << endl;
+		cout << currentPos << endl;
+		cout << Offset[whileIndex] << endl;
+			if (img.at<uchar>(currentPos + Offset[whileIndex]) == 0)
+			{
+				newBacktrackPos = whileIndex;
+				break;
+			}
+
 
 		whileIndex++;
 		if (whileIndex > 7)
 			whileIndex = 0;
 	}
-
 
 	return newBacktrackPos;
 }
