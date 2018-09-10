@@ -25,19 +25,36 @@ Point Offset[8] = {
 int main()
 {
 
-	Mat image;
-	image = imread("res/rummikub0.jpg", CV_LOAD_IMAGE_COLOR);
-	if (!image.data)
+	Mat Numbers;
+	Numbers = imread("res/rummikub0.jpg", CV_LOAD_IMAGE_COLOR);
+	if (!Numbers.data)
 	{
 		cout << "Could not open or find the image" << std::endl;
 		getchar();
 		return -1;
 	}
-	//imshow("Original", image);
+
+
+	Mat monsters; 
+	monsters = imread("res/monsters0.jpg", CV_LOAD_IMAGE_COLOR);
+	if (!monsters.data)
+	{
+		cout << "Could not open or find the image" << std::endl;
+		getchar();
+		return -1;
+	}
+	Mat gray_image_montser;
+	cvtColor(monsters, gray_image_montser, CV_BGR2GRAY);
+
+
+	Mat monstersTreshold;
+	threshold(gray_image_montser, monstersTreshold, 120, 1, CV_THRESH_BINARY_INV);
+
+	imshow("monsters", monstersTreshold * 255);
 	//waitKey(0);
 	// De afbeelding converteren naar een grijswaarde afbeelding
 	Mat gray_image;
-	cvtColor(image, gray_image, CV_BGR2GRAY);
+	cvtColor(Numbers, gray_image, CV_BGR2GRAY);
 	//imshow("Original_grey", gray_image);
 	//waitKey(0);
 
@@ -47,68 +64,68 @@ int main()
 
 	//Treshold 
 	Mat treshhold_Img;
-	Range range = Range(128, 255);
-	threshold(roi, treshhold_Img, 120, 1, 0);
-	//imshow("treshold", treshhold_Img );
+	threshold(roi, treshhold_Img, 120, 1, CV_THRESH_BINARY_INV);
 
-	Mat Number9 = treshhold_Img(Rect(900, 0, 80, 80));
-	// invert img
-	Number9 = invertBits(Number9);
-	imshow("Number", Number9 * 255);
-	printImgData(Number9);
-
-	//moore boundry tracking algrtithm 
-	MooreBoundry(Number9);
-
+	MooreBoundry(treshhold_Img);
+	MooreBoundry(monstersTreshold);
 
 	waitKey(0);
 	getchar();
 
-
-
 }
 
-
-Point findFirstPixel(Mat img);
-Mat calculateContour(Point startPixel, Mat img);
+void calculateContour(Point startPixel, Mat img, Mat contour);
 
 void MooreBoundry(Mat img)
 {
-	Point firstPixel = findFirstPixel(img);
-	imshow("Contour", calculateContour(firstPixel, img) * 255);
-	moveWindow("Contour", 100, 20);
+	Mat contour = Mat::zeros(img.rows, img.cols, img.type());
+
+	img.convertTo(img, CV_16S);
+	Mat blobs = Mat::zeros(img.rows, img.cols, img.type());
+	vector<Point2d *> firstpixelVec2;
+	vector<Point2d *> posVec2;
+	vector<int> areaVec2;
+	labelBLOBsInfo(img, blobs, firstpixelVec2, posVec2, areaVec2);
+	img.convertTo(img, CV_8U);
+	
+
+	for (int i = 0; i < firstpixelVec2.size(); i++) 
+	{
+		if (areaVec2[i] > 50)
+		{
+			calculateContour(Point(firstpixelVec2[i]->y, firstpixelVec2[i]->x), img, contour);
+		}
+	}
+
+	imshow("Controur" , contour * 255);
+	waitKey();
 
 }
 
 int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos);
 
-Mat calculateContour(Point startPixel, Mat img)
+void calculateContour(Point startPixel, Mat img, Mat contour)
 {
 	bool finished = false;
 	uchar char1 = 1;
 	int backTrackPos = 0;
-	Mat contour = Mat::zeros(img.cols, img.rows, img.type());
 	contour.at<uchar>(startPixel) = char1;
 	Point currentPos = startPixel;
 	Point lastPos;
-
+	
 	while (!finished)
 	{
+		cout << currentPos << endl;
 		int index = 0;
 		int whileindex = backTrackPos;
 		while (index < 8)
 		{
-			if (img.at<uchar>(currentPos + Offset[whileindex]) == 1)
+			if (img.at<uchar>(currentPos + Offset[whileindex]) == char1)
 			{
 				lastPos = currentPos;
-				cout << whileindex << endl;
 				currentPos = currentPos + Offset[whileindex];
-				
-					backTrackPos = calculateBackTrackPos(img, currentPos, lastPos);
-		
-
+				backTrackPos = calculateBackTrackPos(img, currentPos, lastPos);
 				contour.at<uchar>(lastPos) = char1;
-				
 				break;
 			}
 
@@ -123,7 +140,6 @@ Mat calculateContour(Point startPixel, Mat img)
 			finished = true;
 	}
 
-	return contour;
 }
 
 int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
@@ -138,7 +154,6 @@ int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 	{ 1, 1, 5 },
 	{1,-1,3},
 	{-1,1,1}
-
 	};
 
 	int backtrackStartPos;
@@ -147,31 +162,29 @@ int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 
 	for (int i = 0; i < 8; i++)
 	{
-			if (pointdif.x == backtrackPos[i][0] && pointdif.y == backtrackPos[i][1])
-			{
-				backtrackStartPos = backtrackPos[i][2];
+		if (pointdif.x == backtrackPos[i][0] && pointdif.y == backtrackPos[i][1])
+		{
+			backtrackStartPos = backtrackPos[i][2];
 
-				break;
-			}
-		
-		
+			break;
+		}
+
+
 	}
-	if (backtrackStartPos < 0)
-		cout << endl;
 
 	int index = 0;
 	int whileIndex = backtrackStartPos;
-	
+
 	while (index < 8)
 	{
-		cout << whileIndex << endl;
-		cout << currentPos << endl;
-		cout << Offset[whileIndex] << endl;
-			if (img.at<uchar>(currentPos + Offset[whileIndex]) == 0)
-			{
-				newBacktrackPos = whileIndex;
-				break;
-			}
+		//cout << whileIndex << endl;
+		//cout << currentPos << endl;
+		//cout << Offset[whileIndex] << endl;
+		if (img.at<uchar>(currentPos + Offset[whileIndex]) == 0)
+		{
+			newBacktrackPos = whileIndex;
+			break;
+		}
 
 
 		whileIndex++;
@@ -181,80 +194,6 @@ int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 
 	return newBacktrackPos;
 }
-
-Point findFirstPixel(Mat img)
-{
-	for (int y = 0; y < img.cols; y++)
-	{
-		for (int x = 0; x < img.rows; x++)
-		{
-			if (img.at<uchar>(Point(x, y)) == 1)
-			{
-				cout << "first pixel found at [" << x << "," << y << "]" << endl;
-				return Point(x, y);
-			}
-
-		}
-	}
-}
-
-//void 
-
-
-//
-//void MooreRowCheck(Mat img, Mat boundry, int x, int y)
-//{
-//	uchar char1 = 1;
-//
-//	while (true)
-//	{
-//		if (img.at<uchar>(x - 1, y - 1) == 1)
-//			boundry.at<uchar>(Point(y - 1, x - 1)) = char1;
-//
-//		else if (img.at<uchar>(x - 1, y ) == 1)
-//			boundry.at<uchar>(Point(y - 1, x)) = char1;
-//
-//		else if (img.at<uchar>(x - 1, y + 1) == 1)
-//			boundry.at<uchar>(Point(y - 1, x + 1)) = char1;
-//
-//		else if (img.at<uchar>(x, y + 1) == 1)
-//			boundry.at<uchar>(Point(y, x + 1)) = char1;
-//		else
-//			break;
-//
-//		x++;
-//		
-//	}
-//}
-
-
-
-Mat invertBits(Mat img)
-{
-	Mat inverted_IMG;
-	inverted_IMG = Mat::zeros(img.cols, img.rows, img.type());
-
-	for (int x = 0; x < img.rows; x++)
-	{
-		for (int y = 0; y < img.cols; y++)
-		{
-			if (img.at<uchar>(x, y) == 1)
-			{
-				uchar char0 = 0;
-				inverted_IMG.at<uchar>(Point(y, x)) = char0;
-			}
-			else
-			{
-				uchar char1 = 1;
-				inverted_IMG.at<uchar>(Point(y, x)) = char1;
-			}
-
-		}
-	}
-	return inverted_IMG;
-
-}
-
 
 void printImgData(Mat img)
 {

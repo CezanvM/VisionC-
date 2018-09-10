@@ -127,6 +127,7 @@
     <ClInclude Include="avansvisionlib.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\monsters0.jpg" />
     <Image Include="res\rummikub0.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
