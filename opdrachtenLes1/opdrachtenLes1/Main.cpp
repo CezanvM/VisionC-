@@ -46,11 +46,9 @@ int main()
 	Mat gray_image_montser;
 	cvtColor(monsters, gray_image_montser, CV_BGR2GRAY);
 
-
 	Mat monstersTreshold;
 	threshold(gray_image_montser, monstersTreshold, 120, 1, CV_THRESH_BINARY_INV);
 
-	imshow("monsters", monstersTreshold * 255);
 	//waitKey(0);
 	// De afbeelding converteren naar een grijswaarde afbeelding
 	Mat gray_image;
@@ -89,6 +87,10 @@ void MooreBoundry(Mat img)
 	img.convertTo(img, CV_8U);
 	
 
+
+
+	//calculateContour(Point(firstpixelVec2[3]->y, firstpixelVec2[3]->x), img, contour);
+
 	for (int i = 0; i < firstpixelVec2.size(); i++) 
 	{
 		if (areaVec2[i] > 50)
@@ -96,9 +98,12 @@ void MooreBoundry(Mat img)
 			calculateContour(Point(firstpixelVec2[i]->y, firstpixelVec2[i]->x), img, contour);
 		}
 	}
-
-	imshow("Controur" , contour * 255);
-	waitKey();
+	double id = generateRandomValue(0, 99);
+	std::ostringstream strs;
+	strs << "Contour";
+	strs << id;
+	std::string str = strs.str();
+	imshow(str, contour * 255);
 
 }
 
@@ -115,7 +120,8 @@ void calculateContour(Point startPixel, Mat img, Mat contour)
 	
 	while (!finished)
 	{
-		cout << currentPos << endl;
+		//cout << currentPos << endl;
+
 		int index = 0;
 		int whileindex = backTrackPos;
 		while (index < 8)
@@ -153,7 +159,7 @@ int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 	{ 0, 1, 7 },
 	{ 1, 1, 5 },
 	{1,-1,3},
-	{-1,1,1}
+	{-1,1,7}
 	};
 
 	int backtrackStartPos;
@@ -165,7 +171,6 @@ int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 		if (pointdif.x == backtrackPos[i][0] && pointdif.y == backtrackPos[i][1])
 		{
 			backtrackStartPos = backtrackPos[i][2];
-
 			break;
 		}
 
@@ -200,3 +205,9 @@ void printImgData(Mat img)
 	img.convertTo(float_IMG, CV_32F);
 	cout << float_IMG << endl;
 }
+
+
+
+
+
+
