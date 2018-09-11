@@ -191,7 +191,6 @@ int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 		if (whileIndex > 7)
 			whileIndex = 0;
 	}
-
 	return newBacktrackPos;
 }
 
