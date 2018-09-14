@@ -121,10 +121,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="avansvisionlib.cpp" />
+    <ClCompile Include="Fase1.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="avansvisionlib.h" />
+    <ClInclude Include="Fase1.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\monsters0.jpg" />
