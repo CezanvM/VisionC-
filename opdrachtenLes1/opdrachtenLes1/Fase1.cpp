@@ -1,5 +1,5 @@
-
 #include "Fase1.h"
+
 
 Point Offset[8] = {
 	{ -1, -1 },   //  +----------+----------+----------+
@@ -15,6 +15,7 @@ Point Offset[8] = {
 
 int startFase1()
 {
+	cout << "start fase1" << endl;
 	Mat Numbers;
 	Numbers = imread("res/rummikub0.jpg", CV_LOAD_IMAGE_COLOR);
 	if (!Numbers.data)
@@ -49,10 +50,10 @@ int startFase1()
 	MooreBoundry(treshhold_Img);
 	MooreBoundry(monstersTreshold);
 
-
+	cout << "end fase1 \n\n\n" << endl;
 }
 
-void MooreBoundry(Mat img)
+vector<vector<Point>> MooreBoundry(Mat img)
 {
 	Mat contour = Mat::zeros(img.rows, img.cols, img.type());
 
@@ -60,32 +61,30 @@ void MooreBoundry(Mat img)
 	Mat blobs = Mat::zeros(img.rows, img.cols, img.type());
 	vector<Point2d *> firstpixelVec2;
 	vector<Point2d *> posVec2;
-	vector<vector<Point>> contourVec;
-	vector<vector<Point>> contourChainVec;
 	vector<int> areaVec2;
+
+	vector<vector<Point>> contourVec;
+
 	labelBLOBsInfo(img, blobs, firstpixelVec2, posVec2, areaVec2);
 	img.convertTo(img, CV_8U);
 
-
-
-
-	//calculateContour(Point(firstpixelVec2[3]->y, firstpixelVec2[3]->x), img, contour);
-
 	for (int i = 0; i < firstpixelVec2.size(); i++)
 	{
-		if (areaVec2[i] > 50)
+		if (areaVec2[i] > 75)
 		{
-			contourVec.push_back(calculateContour(Point(firstpixelVec2[i]->y, firstpixelVec2[i]->x), img, contour));
-
+			vector<Point> contourvector = calculateContour(Point(firstpixelVec2[i]->y, firstpixelVec2[i]->x), img, contour);
+				if(!contourvector.empty())
+					contourVec.push_back(contourvector);
 		}
 	}
-	calculateChainCode(img);
+	calculateBendingEnergy(img);
 	double id = generateRandomValue(0, 99);
 	std::ostringstream strs;
 	strs << "Contour";
 	strs << id;
 	std::string str = strs.str();
 	imshow(str, contour * 255);
+	return contourVec;
 
 }
 vector<Point> calculateContour(Point startPixel, Mat img, Mat contour)
@@ -98,14 +97,18 @@ vector<Point> calculateContour(Point startPixel, Mat img, Mat contour)
 	Point lastPos;
 	vector<Point> contourVec;
 
+	if (firstPixelOutofbounds(startPixel, img))
+	{
+		return contourVec;
+	}
 	while (!finished)
 	{
-		//cout << currentPos << endl;
-
 		int index = 0;
 		int whileindex = backTrackPos;
+
 		while (index < 8)
 		{
+
 			if (img.at<uchar>(currentPos + Offset[whileindex]) == char1)
 			{
 				lastPos = currentPos;
@@ -123,13 +126,24 @@ vector<Point> calculateContour(Point startPixel, Mat img, Mat contour)
 			}
 		}
 
+
 		if (currentPos == startPixel)
 			finished = true;
 	}
 	return contourVec;
 }
 
-void calculateChainCode(Mat img)
+bool firstPixelOutofbounds(Point firstPixel, Mat img)
+{
+	if (firstPixel.x == 0 || firstPixel.y == 0)
+		return true;
+	if (firstPixel.x >= img.cols || firstPixel.y >= img.rows)
+		return true;
+
+	return false;
+}
+
+vector<vector<int>> calculateChainCode(Mat img)
 {
 	CvChain* chain = 0;
 	CvMemStorage* storage = 0;
@@ -155,29 +169,33 @@ void calculateChainCode(Mat img)
 			chaincode.push_back(singleChainCode);
 		}
 	}
-	calculateBendingEnergy(chaincode);
-
+	return chaincode;
 }
 
-void calculateBendingEnergy(vector<vector<int>> chainCodes)
+
+
+
+vector<int> calculateBendingEnergy(Mat img)
 {
+	vector<int> bendingEnergies;
+	vector<vector<int>> chainCodes = calculateChainCode(img);
 	for (int x = 0; x < chainCodes.size(); x++)
 	{
 		int bendingEnergy = 0;
 
 		for (int y = 0; y < chainCodes.at(x).size(); y++)
 		{
-			int counterClockWiseIndex = 0;
-			int counterAntiClockwise = 0;
+			int ClockWiseIndex = 0;
+			int counterClockwise = 0;
 			int currentNumber = chainCodes.at(x).at(y);
 			int NextNumber = chainCodes.at(x).at(y + 1);
 			bool stepping = true;
 
-			while ((currentNumber + counterClockWiseIndex) % 8 != NextNumber)
+			while ((currentNumber + ClockWiseIndex) % 8 != NextNumber)
 			{
-				counterClockWiseIndex++;
+				ClockWiseIndex++;
 			}
-			int currentNumberFixed = (currentNumber - counterAntiClockwise);
+			int currentNumberFixed = (currentNumber - counterClockwise);
 			while (stepping)
 			{
 				if (currentNumberFixed < 0)
@@ -189,27 +207,24 @@ void calculateBendingEnergy(vector<vector<int>> chainCodes)
 					break;
 				}
 				currentNumberFixed--;
-				counterAntiClockwise++;
+				counterClockwise++;
 			}
 
 
-			if (counterClockWiseIndex < counterAntiClockwise)
-				bendingEnergy += 1 * counterClockWiseIndex;
+			if (ClockWiseIndex < counterClockwise)
+				bendingEnergy += 1 * ClockWiseIndex;
 			else
-				bendingEnergy += 1 * counterAntiClockwise;
+				bendingEnergy += 1 * counterClockwise;
 
 			if (chainCodes.at(x).size() == y + 2)
 				break;
 
 		}
-
-
+		bendingEnergies.push_back(bendingEnergy);
 		cout << "bending energy is: " << bendingEnergy << endl;
 	}
-
+	return bendingEnergies;
 }
-
-
 
 int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 {
@@ -236,8 +251,6 @@ int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 			backtrackStartPos = backtrackPos[i][2];
 			break;
 		}
-
-
 	}
 
 	int index = 0;
@@ -251,17 +264,9 @@ int calculateBackTrackPos(Mat img, Point currentPos, Point lastPos)
 			break;
 		}
 
-
 		whileIndex++;
 		if (whileIndex > 7)
 			whileIndex = 0;
 	}
 	return newBacktrackPos;
-}
-
-void printImgData(Mat img)
-{
-	Mat float_IMG;
-	img.convertTo(float_IMG, CV_32F);
-	cout << float_IMG << endl;
 }

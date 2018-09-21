@@ -15,36 +15,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp">
+    <ClCompile Include="demo 3 - callibratie met schaakbordpatroon en saven callibratie data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="avansvisionlib.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Fase1.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Fase2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="avansvisionlib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Fase1.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Fase2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="res\rummikub0.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="res\monsters0.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
   </ItemGroup>
 </Project>
